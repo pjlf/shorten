@@ -2,7 +2,9 @@
 var express = require('express');
 var cors = require('cors');
 
-var app = express();
+var app = express(), 
+	server = require('http').createServer(app), 
+	io = require('socket.io').listen(server);
 
 var idNum = 6;
 
@@ -12,7 +14,9 @@ var shortens = [
 	{ id:'id3', url:'www.google.co.uk', count:0 },
 	{ id:'id4', url:'www.google.br', count:0 },
 	{ id:'id5', url:'www.google.it', count:0 }
-]
+];
+
+var listSockets = [];
 
 app.use( express.urlencoded() );
 app.use( cors() );
@@ -24,15 +28,7 @@ app.get('/', function(req, res){
 //curl localhost:8000/aaa
 app.get('/:url', function(req, res){
 	var parm = req.params['url'];
-/*
-	var link = shortens.find(function(element, index, array){
-		if(element['id'] == parm)
-			return element['url'];
-		return '';
-	});
-	
-	USAR FILTER
-*/
+
 	var link = '';
 	for (var i=0; i<shortens.length; i++){
 		if (shortens[i].id == parm){
@@ -42,18 +38,20 @@ app.get('/:url', function(req, res){
 	}
 	console.log(link);
 	if (link != ''){
-		res.redirect('http://' + link);
-		/*
-		res.header(location);
-		res.send(302);
-		*/
+		var aux = link.indexOf("http:");
+		if (aux == -1){
+			res.redirect('http://' + link);
+		}
+		else{
+			res.redirect(link);
+		}
+		
 		shortens[i].count++;
 	}
 	// console.log(req.params);
 	res.send('url: ' + link);
 });
 
-//curl localhost:8000 -i -X POST -d 'a=b'
 app.post('/', function(req, res){
 	if(req.body.hasOwnProperty('url')){
 
@@ -74,7 +72,7 @@ app.post('/', function(req, res){
 			};
 			shortens.push(shorten);
 		}
-		
+
 		console.log('ok');
 		res.send(req.body);
 	}
@@ -84,13 +82,14 @@ app.post('/', function(req, res){
 	}
 });
 
-/*
-app.post('/:url', function(req, res){
-	console.log(req.params);
-	res.send(req.params);
-})
-*/
+io.sockets.on('connection', function (socket) {
+	listSockets.push(socket);
 
-app.listen(8000);
+	socket.emit('saudacoes', { hello: 'olá amigo, nao metas imagens nos shortens please.' });
+}
+
+
+//app.listen(8000);
+server.listen(8000);
 
 
