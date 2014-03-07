@@ -6,6 +6,9 @@ var app = express(),
 	server = require('http').createServer(app), 
 	io = require('socket.io').listen(server);
 
+var EventEmitter = require('events').EventEmitter;
+var ee = new EventEmitter();
+
 var idNum = 6;
 
 var shortens = [
@@ -71,6 +74,8 @@ app.post('/', function(req, res){
 				count: 0
 			};
 			shortens.push(shorten);
+
+			ee.emit('newShorten', shorten);
 		}
 
 		console.log('ok');
@@ -83,10 +88,22 @@ app.post('/', function(req, res){
 });
 
 io.sockets.on('connection', function (socket) {
-	listSockets.push(socket);
+
+
+	function emitShorten(pShort){ socket.emit('respNewShorten', pShort); }
+
+	ee.addListener('newShorten', emitShorten);
+
+	socket.on('disconnect', function(){
+		ee.removeListener('newShorten', emitShorten);
+	});
 
 	socket.emit('saudacoes', { hello: 'olá amigo, nao metas imagens nos shortens please.' });
-}
+
+	/*socket.on('pedidoShortens', function (socket){
+		socket.emit('listShortens', shortens);
+	});*/
+});
 
 
 //app.listen(8000);
