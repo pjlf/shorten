@@ -5,8 +5,7 @@ var crypto = require('crypto');
 var assert = require('assert');
 
 var HMAC_ALG = 'sha1';
-// var HMAC_KEY = process.env.KEY;
-var HMAC_KEY = 'glorioso';
+var HMAC_KEY = process.env.KEY;
 
 //var MAX_SESSION_SECONDS = 60 * 60 * 2;
 var MAX_SESSION_SECONDS = 60;
@@ -83,10 +82,14 @@ app.post('/login', function(req, res){
 	res.send(token);
 });
 
+function createSign(us, ts){
+	return crypto.createHmac(HMAC_ALG, HMAC_KEY).update(us+':'+ts).digest('base64');
+}
+
 function generateToken(username) {
 	var now = Math.floor(Date.now() / 1000);
 
-	var sign = crypto.createHmac(HMAC_ALG, HMAC_KEY).update(username+':'+now).digest('base64');
+	var sign = createSign(username, now);
 
 	return JSON.stringify({ ts: now, username: username, sign: sign });
 }
@@ -153,7 +156,7 @@ function validateToken(token){
 };
 
 function generateSign(username, ts) {
-	var sign = crypto.createHmac(HMAC_ALG, HMAC_KEY).update(username+':'+ts).digest('base64');
+	var sign = createSign(username, ts);
 	return sign;
 }
 
@@ -167,7 +170,7 @@ io.sockets.on('connection', function (socket) {
 		ee.removeListener('newShorten', emitShorten);
 	});
 
-	socket.emit('saudacoes', { hello: 'olá amigo, nao metas imagens nos shortens please.' });
+	socket.emit('saudacoes', { hello: 'olá' });
 
 	/*socket.on('pedidoShortens', function (socket){
 		socket.emit('listShortens', shortens);
