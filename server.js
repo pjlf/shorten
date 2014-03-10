@@ -125,7 +125,7 @@ app.post('/', function(req, res){
 		if (shorten === undefined){
 			shorten = {
 				id: 'id' + idNum++, 
-				url: req.body['url'], 
+				url: req.body['url'].replace(/<\/?[^>]+(>|$)/g, ""), 
 				count: 0
 			};
 			shortens.push(shorten);
