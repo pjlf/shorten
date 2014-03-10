@@ -70,17 +70,17 @@ app.get('/:url', function(req, res){
 app.post('/login', function(req, res){
 	var user = req.body['user'];
 	var pass = req.body['password'];
-	var resp = {token: '', erro: ''}
+	var token = '';
 
 	console.log('user: ' + user + ', pass: ' + pass);
 
 	if(! validate(user, pass)){
-		resp.erro = 'Password inválida';
-		res.send(resp)
+		res.send(403, 'Username/Password inválido');
 	}
 
-	resp.token = generateToken(user);
-	res.send(resp);
+	token = generateToken(user);
+	console.log('Token: ' + token);
+	res.send(token);
 });
 
 function generateToken(username) {
@@ -104,8 +104,7 @@ app.post('/', function(req, res){
 
 	if(! validateToken(token)){
 		console.log('Token inválido');
-		resposta.erro = 'Invalid token, not authorized';
-		res.send(resposta);
+		res.send(401, 'Invalid token, not authorized');
 		return;
 	}
 
@@ -130,15 +129,12 @@ app.post('/', function(req, res){
 
 			ee.emit('newShorten', shorten);
 		}
-
-		console.log('ok');
-		resposta.obj = req.body;
-		res.send(resposta);
+		console.log('new shorten: ok');
+		res.send(req.body);
 	}
 	else{
-		console.log('invalid');
-		esposta.erro = 'Invalid shorten';
-		res.send(resposta);
+		console.log('invalid shorten');
+		res.send(400, 'Invalid shorten');
 	}
 });
 
